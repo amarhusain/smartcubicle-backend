@@ -7,29 +7,36 @@ import { config } from './config/config';
 import mongoose from 'mongoose';
 import { CommonRoutesConfig } from './common/common.routes.config';
 import { AuthRoutes } from './routes/auth.router';
+import router from './routes/state.router';
+import stateRouter from './routes/state.router';
 
 
 
 const app: express.Application = express();
-const server: http.Server = http.createServer(app);
-const routes: Array<CommonRoutesConfig> = [];
 
 app.use(bodyparser.json());
 app.use(cors());
 
-routes.push(new AuthRoutes(app));
+app.use('/state', stateRouter)
+
 
 const port = config.server.port;
 
 
 
 app.get('/', (req: Request, res: Response) => {
-    res.status(200).send(`Server is Amar running at http://localhost:${port}`);
+    res.status(200).send(`Server is running at http://localhost:${port}`);
+});
+
+// Handling non matching request from client
+app.use((req: Request, res: Response) => {
+    res.status(404).send(`<h1>Requested url not found!</h1>`);
 });
 
 if (!config.mongo.uri) {
     throw new Error('Mongo URI must be defined.');
 }
+
 
 try {
     mongoose.connect(config.mongo.uri);
@@ -37,6 +44,6 @@ try {
     throw new Error('Error connecting to database.')
 }
 
-server.listen(port, () => {
+app.listen(port, () => {
     console.log(`[server]: Server is running at http://localhost:${port}`);
 });
